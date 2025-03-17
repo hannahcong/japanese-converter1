@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日语假名转换器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            margin: 10px 0;
+            padding: 10px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            min-height: 100px;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        #loading {
+            display: none;
+            color: #666;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>日语假名转换器</h1>
+    <textarea id="input" placeholder="请输入日语文本..."></textarea>
+    <div id="loading">正在初始化转换器，请稍候...</div>
+    <div>
+        <button id="hiraganaBtn" disabled onclick="convertToHiragana()">转换为平假名</button>
+        <button id="katakanaBtn" disabled onclick="convertToKatakana()">转换为片假名</button>
+    </div>
+    <div id="result"></div>
+    <script src="js/kuroshiro.min.js"></script>
+    <script src="js/kuroshiro-analyzer-kuromoji.min.js"></script>
+    <script>
+        const loadingEl = document.getElementById('loading');
+        const hiraganaBtn = document.getElementById('hiraganaBtn');
+        const katakanaBtn = document.getElementById('katakanaBtn');
+        
+        // 显示加载状态
+        loadingEl.style.display = 'block';
+        loadingEl.textContent = '正在加载转换器...';
+
+        // 等待页面加载完成后再初始化
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // 检查文件是否正确加载
+                if (typeof Kuroshiro === 'undefined') {
+                    console.error('kuroshiro.min.js 未正确加载');
+                    throw new Error('Kuroshiro 库加载失败');
+                }
+                if (typeof KuromojiAnalyzer === 'undefined') {
+                    console.error('kuroshiro-analyzer-kuromoji.min.js 未正确加载');
+                    throw new Error('KuromojiAnalyzer 库加载失败');
+                }
+
+                loadingEl.textContent = '正在初始化转换器...';
+                const kuroshiro = new Kuroshiro.default();
+                
+                loadingEl.textContent = '正在加载词典数据...';
+                await kuroshiro.init(new KuromojiAnalyzer({
+                    dictPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict'
+                }));
+                
+                window.kuroshiro = kuroshiro;
+                
+                // 初始化成功，启用按钮
+                hiraganaBtn.disabled = false;
+                katakanaBtn.disabled = false;
+                loadingEl.style.display = 'none';
+                
+                console.log('转换器初始化成功');
+            } catch (err) {
+                console.error('转换器初始化失败，详细错误:', err);
+                loadingEl.textContent = '转换器初始化失败: ' + err.message;
+            }
+        });
+
+        // 转换为平假名
+        async function convertToHiragana() {
+            if (!window.kuroshiro) {
+                alert('转换器还未初始化完成，请稍候再试');
+                return;
+            }
+            const input = document.getElementById('input').value;
+            try {
+                const result = await window.kuroshiro.convert(input, {
+                    to: 'hiragana',
+                    mode: 'furigana'
+                });
+                document.getElementById('result').innerHTML = result;
+            } catch (error) {
+                console.error('转换错误:', error);
+                alert('转换失败，请重试');
+            }
+        }
+
+        // 转换为片假名
+        async function convertToKatakana() {
+            if (!window.kuroshiro) {
+                alert('转换器还未初始化完成，请稍候再试');
+                return;
+            }
+            const input = document.getElementById('input').value;
+            try {
+                const result = await window.kuroshiro.convert(input, {
+                    to: 'katakana',
+                    mode: 'furigana'
+                });
+                document.getElementById('result').innerHTML = result;
+            } catch (error) {
+                console.error('转换错误:', error);
+                alert('转换失败，请重试');
+            }
+        }
+    </script>
+</body>
+</html>
