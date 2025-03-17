@@ -42,7 +42,21 @@
             display: none;
             color: #666;
             margin: 10px 0;
-        }
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: bold;
+    }
+        .loading-active {
+            display: block !important;
+            animation: pulse 1.5s infinite;
+    }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+    }
     </style>
 </head>
 <body>
@@ -66,22 +80,16 @@
         loadingEl.textContent = '正在加载转换器...';
 
         // 等待页面加载完成后再初始化
-        window.addEventListener('DOMContentLoaded', async () => {
+             window.addEventListener('DOMContentLoaded', async () => {
             try {
-                // 检查文件是否正确加载
-                if (typeof Kuroshiro === 'undefined') {
-                    console.error('kuroshiro.min.js 未正确加载');
-                    throw new Error('Kuroshiro 库加载失败');
-                }
-                if (typeof KuromojiAnalyzer === 'undefined') {
-                    console.error('kuroshiro-analyzer-kuromoji.min.js 未正确加载');
-                    throw new Error('KuromojiAnalyzer 库加载失败');
-                }
+            loadingEl.classList.add('loading-active');
+                
+                // ... 检查文件加载的代码 ...
 
-                loadingEl.textContent = '正在初始化转换器...';
+                loadingEl.textContent = '正在初始化转换器（约需要10-15秒）...';
                 const kuroshiro = new Kuroshiro.default();
                 
-                loadingEl.textContent = '正在加载词典数据...';
+                loadingEl.textContent = '正在加载词典数据，请耐心等待...';
                 await kuroshiro.init(new KuromojiAnalyzer({
                     dictPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict'
                 }));
@@ -89,16 +97,18 @@
                 window.kuroshiro = kuroshiro;
                 
                 // 初始化成功，启用按钮
-                hiraganaBtn.disabled = false;
-                katakanaBtn.disabled = false;
-                loadingEl.style.display = 'none';
-                
-                console.log('转换器初始化成功');
-            } catch (err) {
-                console.error('转换器初始化失败，详细错误:', err);
-                loadingEl.textContent = '转换器初始化失败: ' + err.message;
-            }
-        });
+                           hiraganaBtn.disabled = false;
+            katakanaBtn.disabled = false;
+            loadingEl.classList.remove('loading-active');
+            loadingEl.style.display = 'none';
+            
+            console.log('转换器初始化成功');
+        } catch (err) {
+            console.error('转换器初始化失败，详细错误:', err);
+            loadingEl.textContent = '转换器初始化失败: ' + err.message;
+            loadingEl.classList.remove('loading-active');
+        }
+    });
 
         // 转换为平假名
         async function convertToHiragana() {
